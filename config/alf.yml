@@ -1,0 +1,3 @@
+site: "https://vinechurch.net"
+api_path: "/includes/ajax/default/"
+format: 'json'

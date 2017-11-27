@@ -1,0 +1,19 @@
+consumer_key: "162"
+consumer_secret: "dd265054-fd54-436c-97ee-2c191571d268"
+site: "https://{church_code}.fellowshiponeapi.com"
+# Store the church code if you are writing a 2nd Party implementation
+# Otherwise, you'll want to ask for the church code from the user
+church_code: "vccmdhil"
+authentication_type: "credentials" #oauth or credentials
+request_token_path: "/v1/Tokens/RequestToken"
+access_token_path: "/v1/Tokens/AccessToken" #OAuth only
+# OAuth authentication vars
+portal_authorize_path: "/v1/PortalUser/Login"
+weblink_authorize_path: "/v1/WeblinkUser/Login"
+# Use the following for credentials based authentication
+portal_credential_token_path: "/v1/PortalUser/AccessToken"
+weblink_credential_token_path: "/v1/WeblinkUser/AccessToken"
+format: 'json'
+auth_username: 'f1data'
+auth_password: 'Password#1'
+api_version: 'v1'
