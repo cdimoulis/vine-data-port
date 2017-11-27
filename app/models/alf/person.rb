@@ -46,12 +46,19 @@ class ALF::Person < ALF::Base
   # The mapping for civicrm
   def civicrm_map
     contact = contact_model()
+    if !contact.valid? || !contact.save
+      raise "Invalid Contact Model\nALF::Person: #{self.inspect}\nCIVICRM::Contact: #{contact.errors.inspect}"
+    end
+
+    prev_id = prev_id_model(contact)
+    if !prev_id.valid? || !prev_id.save
+      raise "Invalid ContactPrevId Model\nCIVICRM::Contact: #{contact.inspect}\nPrevId: #{prev_id.inspect}"
+    end
     # in case more needs to be done here
-    contact
   end
 
   def contact_model
-    contact = CIVICRM::Contact.new(
+    CIVICRM::Contact.new(
       :contact_type => "Individual",
       :contact_sub_type => nil,
       :sort_name => self.sort_name,
@@ -78,6 +85,20 @@ class ALF::Person < ALF::Base
       :modified_date => self.person_last_update_date
     )
   end
+
+  # Pass in a created contact model to associate with this F1 model
+  def prev_id_model(contact)
+    return if contact.nil? or contact.id.nil? or !CIVICRM::Contact.exists?(contact.id)
+    CIVICRM::ContactPrevId.new(
+      contact_id: contact.id,
+      alf_id: self.id
+    )
+  end
+
+
+  ###
+  # Helper methods for CIVICRM mapping
+  ###
 
   def sort_name
     n = "#{self.last_name}, #{self.first_name}"

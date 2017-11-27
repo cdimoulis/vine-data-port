@@ -41,12 +41,19 @@ class ALF::Household < ALF::Base
   # The mapping to civicrm
   def civicrm_models
     household = contact_model()
+    if !household.valid? || !household.save
+      raise "Invalid Contact Model\nALF::Household: #{self.inspect}\nCIVICRM::Contact: #{contact.errors.inspect}"
+    end
+
+    prev_id = prev_id_model(contact)
+    if !prev_id.valid? || !prev_id.save
+      raise "Invalid ContactPrevId Model\nCIVICRM::Contact: #{contact.inspect}\nPrevId: #{prev_id.inspect}"
+    end
     # More stuff if needed
-    household
   end
 
   def contact_model
-    contact = CIVICRM::Contact.new(
+    CIVICRM::Contact.new(
       :contact_type => "Household",
       :contact_sub_type => "Family",
       :sort_name => self.household_name,
@@ -62,6 +69,15 @@ class ALF::Household < ALF::Base
       :household_name => self.household_name,
       :created_date => self.household_created_date,
       :modified_date => self.household_last_update
+    )
+  end
+
+  # Pass in a created contact model to associate with this F1 model
+  def prev_id_model(contact)
+    return if contact.nil? or contact.id.nil? or !CIVICRM::Contact.exists?(contact.id)
+    CIVICRM::ContactPrevId.new(
+      contact_id: contact.id,
+      alf_id: self.id
     )
   end
 
