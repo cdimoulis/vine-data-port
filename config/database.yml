@@ -30,11 +30,3 @@ production:
   pool: <%= ENV['DB_POOL'] || 10 %>
   timeout: <%= ENV['DB_TIMEOUT'] || 10 %>
   reaping_frequency: <%= ENV['DB_REAP_FREQ'] || 10 %>
-
-civicrm:
-  adapter: mysql2
-  encoding: utf8
-  database: vine_civicrm
-  pool: 5
-  username: root
-  password:
