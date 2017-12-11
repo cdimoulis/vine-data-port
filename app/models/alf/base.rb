@@ -110,6 +110,15 @@ class ALF::Base #< ActiveRecord::Base
       records
     end
 
+    # Get records for a single reqeust as models
+    def print_records(path=nil, data=nil)
+      str = ''
+      _get_records(path, data).each do |r|
+        str += "#{r}\n"
+      end
+      puts str
+    end
+
     # Page through all the records on a request.
     def _get_all_records(path=nil, data=nil)
       data ||= {}
