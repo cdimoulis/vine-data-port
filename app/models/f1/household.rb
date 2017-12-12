@@ -70,7 +70,12 @@ class F1::Household < F1::Base
     if !prev_id.valid? || !prev_id.save
       raise "Invalid ContactPrevId Model\nCIVICRM::Contact: #{contact.inspect}\nPrevId: #{prev_id.inspect}"
     end
-    # More stuff if needed
+
+    relationships.each do |rel|
+      if !rel.valid? || !rel.save
+        raise "Invalid relationship model\n#{rel.errors.inspect}\n"
+      end
+    end
   end
 
   def contact_model
@@ -100,5 +105,96 @@ class F1::Household < F1::Base
       contact_id: contact.id,
       f1_id: self.id
     )
+  end
+
+  # Join the relationships of all the people in the household
+  def relationships
+    rels = []
+    # Get the types
+    head_type = F1::HouseholdMemberType.where(name: 'Head').take
+    spouse_type = F1::HouseholdMemberType.where(name: 'Spouse').take
+    child_type = F1::HouseholdMemberType.where(name: 'Child').take
+
+    # Get the individuals in each part
+    head = self.people.where(household_member_type_id: head_type.id).take
+    spouse = self.people.where(household_member_type_id: spouse_type.id).take
+    children = self.people.where(household_member_type_id: child_type.id)
+
+    # Get relationships
+    # head - a    household - b
+    head_household = CIVICRM::RelationshipType.where(id: 6).take
+    # child - a   parent - b
+    child_parent = CIVICRM::RelationshipType.where(id: 1).take
+    # spouse - a/b
+    spouse = CIVICRM::RelationshipType.where(id: 2).take
+    # sibling - a/b
+    sibling = CIVICRM::RelationshipType.where(id: 3).take
+    # individual - a      household - b
+    member_household = CIVICRM::RelationshipType.where(id: 7).take
+
+    # Head relationship to household
+    if head.present?
+      hr = CIVICRM::Relationship.new(
+        contact_id_a: head.id,
+        contact_id_b: self.id,
+        relationship_type_id: head_household.id
+      )
+      rels.push hr
+    end
+
+    # Spouse relationships
+    if spouse.present?
+      # belongs to household
+      sr = CIVICRM::Relationship.new(
+        contact_id_a: spouse.id,
+        contact_id_b: self.id,
+        relationship_type_id: member_household.id
+      )
+      rels.push sr
+      # Add spouse relationships if head is present
+      if head.present?
+        shr = CIVICRM::Relationship.new(
+          contact_id_a: head.id,
+          contact_id_b: spouse.id,
+          relationship_type_id: spouse.id
+        )
+        rels.push shr
+      end
+    end
+
+    # child relationships
+    if children.length > 0
+      # Add to household
+      children.each do |c|
+        cr = CIVICRM::Relationship.new(
+          contact_id_a: c.id,
+          contact_id_b: self.id,
+          relationship_type_id: member_household.id
+        )
+        rels.push c
+
+        # add to parents
+        if head.present?
+          chr = CIVICRM::Relationship.new(
+            contact_id_a: c.id,
+            contact_id_b: head.id,
+            relationship_type_id: child_parent.id
+          )
+          rels.push chr
+        end
+
+        # add spouse to parents
+        if spouse.present?
+          csr = CIVICRM::Relationship.new(
+            contact_id_a: c.id,
+            contact_id_b: spouse.id,
+            relationship_type_id: child_parent.id
+          )
+          rels.push csr
+        end
+      end
+    end
+
+    rels
   end
 end
