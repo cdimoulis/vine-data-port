@@ -90,5 +90,87 @@ class F1::Communication < F1::Base
   end
 
   # Total Records
-  # 7/28/2017 26,987
+  # 7/28/2017 26,987####
+  # CIVICRM model mapping
+  ####
+
+  # The mapping to civicrm
+  def civicrm_models
+    # Only can save email and telephones
+    if communication_general_type == 'Email'
+      model = email_model
+    elsif communication_general_type == 'Telephone'
+      model = phone_model
+    end
+
+    if model.present?
+      if !model.valid? || !model.save
+        raise "Invalid communication model:\n#{model.errors.inspect}"
+      end
+    end
+
+  end
+
+  # Create the contact model
+  def email_model
+    # If there is a person id then the person_id is the contact id for emails
+    if !person_id.nil?
+      contact_id = person_id
+    # Otherwise find the household
+    else
+      household = F1::Household.where(id: household_id).take
+      # If there are people
+      if household.present? && household.people.count > 0
+        # Get the head of house
+        head = F1::HouseholdMemberType.where(name: 'Head').take
+        person = household.people.where(household_member_type: head.id)
+        if person.present?
+          contact_id = person.id
+        # Otherwise get the first person
+        else
+          contact_id = household.people.first.id
+        end
+      end
+    end
+
+    type = CIVICRM::LocationType.where(name: 'Home').take
+
+    CIVICRM::Email.new(
+      contact_id: contact_id,
+      location_type_id: type.id,
+      email: communication_value,
+      is_primary: preferred
+    )
+  end
+
+  # Create the contact model
+  def phone_model
+    phone_type = communication_type.name.sub(' Phone', '')
+    # Home phone is household
+    if phone_type == 'Home'
+      contact_id = household_id
+    # Other wise it is individual
+    elsif !person_id.nil?
+      contact_id = person_id
+    # Unless the individual doesn't exist
+    else
+      contact_id = household_id
+    end
+
+    loc_type = CIVICRM::LocationType.where(name: 'Home').take
+    types = CIVICRM::OptionGroup.where(title: 'Phone Type').take.option_values
+
+    type = types.where(name: phone_type).take
+    if type.nil?
+      type = types.where(name: 'Phone').take
+    end
+
+    CIVICRM::Phone.new(
+      contact_id: contact_id,
+      location_type_id: loc_type.id,
+      phone: communication_value,
+      is_primary: preferred,
+      phone_type_id: type.id
+    )
+  end
 end

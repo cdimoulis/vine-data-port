@@ -24,5 +24,4 @@ class CIVICRM::OptionValue < CIVICRM::Base
 
   belongs_to :option_group, class_name: CIVICRM::OptionGroup.name
 
-
 end
