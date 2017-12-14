@@ -90,7 +90,9 @@ class F1::Communication < F1::Base
   end
 
   # Total Records
-  # 7/28/2017 26,987####
+  # 7/28/2017 26,987
+
+  ####
   # CIVICRM model mapping
   ####
 
@@ -157,12 +159,26 @@ class F1::Communication < F1::Base
       contact_id = household_id
     end
 
-    loc_type = CIVICRM::LocationType.where(name: 'Home').take
-    types = CIVICRM::OptionGroup.where(title: 'Phone Type').take.option_values
+    # TYPES per discussing with Jason
+    # F1            ->     CIVICRM(locationType - option_value)
+    # Home Phone            Home - Phone
+    # Work Phone            Work - Phone
+    # Mobile Phone          Home - Mobile
+    # Emergency Phone       Home - Emergency (need to create emergency)
 
-    type = types.where(name: phone_type).take
-    if type.nil?
-      type = types.where(name: 'Phone').take
+    civi_types = CIVICRM::OptionGroup.where(title: 'Phone Type').take.option_values
+
+    # If phone type is work then location type is work otherwise home
+    if phone_type == 'Work'
+      loc_type = CIVICRM::LocationType.where(name: 'Work').take
+    else
+      loc_type = CIVICRM::LocationType.where(name: 'Home').take
+    end
+
+    # If phone type is not Home then find it. otherwise type is Phone
+    phn_type = types.where(name: phone_type).take
+    if phn_type.nil?
+      phn_type = types.where(name: 'Phone').take
     end
 
     CIVICRM::Phone.new(
@@ -170,7 +186,7 @@ class F1::Communication < F1::Base
       location_type_id: loc_type.id,
       phone: communication_value,
       is_primary: preferred,
-      phone_type_id: type.id
+      phone_type_id: phn_type.id
     )
   end
 end

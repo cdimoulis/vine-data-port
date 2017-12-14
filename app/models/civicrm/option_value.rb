@@ -24,4 +24,60 @@ class CIVICRM::OptionValue < CIVICRM::Base
 
   belongs_to :option_group, class_name: CIVICRM::OptionGroup.name
 
+  def self.get_records_by_group_id(group_id)
+    self.where(option_group_id: group_id)
+  end
+
+  def self.get_records_by_group_name(name)
+    group = CIVICRM::OptionGroup.where(name: name).take
+    if group
+      self.where(option_group_id: group.id)
+    end
+  end
+
+  def self.print_name_by_group_id(group_id)
+    str = ''
+    get_records_by_group_id(group_id).each do |r|
+      str += "#{r.id}: #{r.value} - #{r.name}\n"
+    end
+
+    puts str
+  end
+
+  def self.print_name_by_group_name(name)
+    str = ''
+    get_records_by_group_name(name).each do |r|
+      str += "#{r.id}: #{r.value} - #{r.name}\n"
+    end
+
+    puts str
+  end
+
+
+
+  #####
+  # For creating
+  #####
+
+  def self.create_new_phone_type(name)
+    group = CIVICRM::OptionGroup.where(name: 'phone_type').take
+    if group.present? && !self.exists?(option_group_id: group.id, name: name)
+      values = self.where(option_group_id: group.id)
+      weight = values.pluck('weight').max + 1
+
+      value = self.new(
+        option_group_id: group.id,
+        label: name,
+        value: "#{weight}",
+        name: name,
+        weight: weight
+      )
+
+      if value.valid? && value.save
+        puts "Saved #{name} CIVICRM::OptionValue record\n"
+      else
+        puts "\n\nCould not create new option value #{value.errors.inspect}\n\n"
+      end
+    end
+  end
 end

@@ -14,5 +14,12 @@
 
 class CIVICRM::LocationType < CIVICRM::Base
 
+  def self.print_names
+    str = ''
+    self.all.each do |r|
+      str += "#{r.id}: #{r.name}\n"
+    end
 
+    puts str
+  end
 end

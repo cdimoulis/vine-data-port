@@ -15,4 +15,12 @@ class CIVICRM::OptionGroup < CIVICRM::Base
   has_many :option_values, class_name: CIVICRM::OptionValue.name
 
 
+  def self.print_names
+    str = ''
+    self.all.each do |n|
+      str += "#{n.id}: #{n.name}\n"
+    end
+
+    puts str
+  end
 end

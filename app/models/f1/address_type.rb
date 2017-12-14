@@ -11,6 +11,24 @@ class F1::AddressType < F1::Base
 
   has_many :addresses, class_name: F1::Address.name
 
+  ###
+  # Helpful methods
+  ###
+
+  def self.print_names
+    str = ''
+    self.all.each do |r|
+      str += "#{r.id}: #{r.name}\n"
+    end
+
+    puts str
+  end
+
+
+  ####
+  # F1 stuff
+  ####
+
   def self.base_route
     '/addresses/addresstypes'
   end
@@ -58,6 +76,6 @@ class F1::AddressType < F1::Base
     F1::AddressType.all.each do |at|
       at.civicrm_models()
     end
-    puts "\nCreated: #{CIVICRM::LocationType.count - start} CIVICRM::LocationType records\n"
+    puts "\nCreated: #{CIVICRM::LocationType.count - start} CIVICRM::LocationType records From F1::AddressType records\n"
   end
 end

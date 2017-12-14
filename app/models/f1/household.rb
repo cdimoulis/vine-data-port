@@ -140,6 +140,7 @@ class F1::Household < F1::Base
         relationship_type_id: head_household.id
       )
       rels.push hr
+      puts "HEAD to HOUSE\n"
     end
 
     # Spouse relationships
@@ -151,6 +152,7 @@ class F1::Household < F1::Base
         relationship_type_id: member_household.id
       )
       rels.push sr
+      puts "SPOUSE to HOUSE\n"
       # Add spouse relationships if head is present
       if head.present?
         shr = CIVICRM::Relationship.new(
@@ -159,38 +161,55 @@ class F1::Household < F1::Base
           relationship_type_id: spouse.id
         )
         rels.push shr
+        puts "HEAD to SPOUSE\n"
       end
     end
 
     # child relationships
     if children.length > 0
+      chlds = children.to_a.dup
       # Add to household
-      children.each do |c|
+      children.each do |child|
         cr = CIVICRM::Relationship.new(
-          contact_id_a: c.id,
+          contact_id_a: child.id,
           contact_id_b: self.id,
           relationship_type_id: member_household.id
         )
-        rels.push c
+        rels.push cr
+        puts "CHILD to HOUSE\n"
 
         # add to parents
         if head.present?
           chr = CIVICRM::Relationship.new(
-            contact_id_a: c.id,
+            contact_id_a: child.id,
             contact_id_b: head.id,
             relationship_type_id: child_parent.id
           )
           rels.push chr
+          puts "HEAD to CHILD\n"
         end
 
         # add spouse to parents
         if spouse.present?
           csr = CIVICRM::Relationship.new(
-            contact_id_a: c.id,
+            contact_id_a: child.id,
             contact_id_b: spouse.id,
             relationship_type_id: child_parent.id
           )
           rels.push csr
+          puts "SPOUSE to CHILD\n"
+        end
+
+        # remove current child from list
+        chlds.delete(child)
+        chlds.each do |sib|
+          sibr = CIVICRM::Relationship.new(
+            contact_id_a: child.id,
+            contact_id_b: sib.id,
+            relationship_type_id: sibling.id
+          )
+          rels.push sibr
+          puts "SIB to SIB\n"
         end
       end
     end
