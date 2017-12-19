@@ -12,14 +12,14 @@ namespace :build do
       F1::Person.all.each do |person|
         person.civicrm_models
       end
-      indiv_count = CIVICRM::Contacts.count
+      indiv_count = CIVICRM::Contact.count
       puts "CIVICRM created #{indiv_count} Individual Contacts\n"
 
       # Create Household contacts
       F1::Household.all.each do |household|
         household.civicrm_models
       end
-      house_count = CIVICRM::Contacts.count - indiv_count
+      house_count = CIVICRM::Contact.count - indiv_count
       puts "CIVICRM created #{house_count} Household Contacts and #{CIVICRM::Relationship.count} Contact Relationships\n"
 
       # Address types are put into CIVICRM::LocationType

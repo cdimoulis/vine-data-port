@@ -21,5 +21,25 @@
 
 class CIVICRM::Relationship < CIVICRM::Base
 
+  validate :contacts_exists, :relationship_type_exists
+
+
+  private
+
+  def contacts_exists
+    if !CIVICRM::Contact.exists?(contact_id_a)
+      errors.add(:contact_id_a, "contact_id_a does not exists #{contact_id_a}")
+    end
+
+    if !CIVICRM::Contact.exists?(contact_id_b)
+      errors.add(:contact_id_a, "contact_id_b does not exists #{contact_id_b}")
+    end
+  end
+
+  def relationship_type_exists
+    if !CIVICRM::RelationshipType.exists?(relationship_type_id)
+      errors.add(:relationship_type_id, "relationship_type_id does not exist #{relationship_type_id}")
+    end
+  end
 
 end

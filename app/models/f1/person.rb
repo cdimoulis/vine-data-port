@@ -125,6 +125,15 @@ class F1::Person < F1::Base
       raise "Invalid Contact Model\nF1::Person: #{self.inspect}\nCIVICRM::Contact: #{contact.errors.inspect}"
     end
 
+    status = value_assimilation_model(contact)
+    if status.present?
+      if !status.valid? || !status.save
+        raise "Invalid ValueAssimilation Model\nF1::Person: #{self.inspect}\nCIVICRM::ValueAssimilation: #{status.errors.inspect}"
+      end
+    else
+
+    end
+
     prev_id = prev_id_model(contact)
     if !prev_id.valid? || !prev_id.save
       raise "Invalid VineContactPrevId Model\nCIVICRM::Contact: #{contact.inspect}\nPrevId: #{prev_id.inspect}"
@@ -170,6 +179,20 @@ class F1::Person < F1::Base
       contact_id: contact.id,
       f1_id: self.id
     )
+  end
+
+  # The CIVICRM membership status
+  def value_assimilation_model(contact)
+    return if contact.nil? or contact.id.nil? or !CIVICRM::Contact.exists?(contact.id)
+    if status.present?
+      group = CIVICRM::OptionGroup.where(name: 'membership_status_20121112161808').take
+      civi_status = CIVICRM::OptionValue.where(option_group_id: group.id, label: status.name).take
+
+      CIVICRM::ValueAssimilation.new(
+        entity_id: contact.id,
+        membership_status_101: civi_status.id
+      )
+    end
   end
 
 
@@ -229,7 +252,10 @@ class F1::Person < F1::Base
   end
 
   def civicrm_is_deceased
-    return self.status.name == 'Deceased';
+    if status.present?
+      return status.name == 'Deceased';
+    end
+    false
   end
 
 

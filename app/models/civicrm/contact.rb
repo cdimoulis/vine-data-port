@@ -75,4 +75,10 @@ class CIVICRM::Contact < CIVICRM::Base
   belongs_to :addressee, -> { where option_group_id: CIVICRM::OptionGroup.where(name: 'addressee').take.id }, foreign_key: 'addressee_id', class_name: CIVICRM::OptionValue.name, primary_key: 'value'
   belongs_to :gender, -> { where option_group_id: CIVICRM::OptionGroup.where(name: 'gender').take.id }, foreign_key: 'gender_id', class_name: CIVICRM::OptionValue.name, primary_key: 'value'
 
+
+  # Remove all but necessary contacts
+  def self.remove_all
+    self.where.not(display_name: 'Vine Church').destroy_all
+  end
+
 end

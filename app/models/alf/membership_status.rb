@@ -50,11 +50,13 @@ class ALF::MembershipStatus < ALF::Base
   def self.civicrm_create_all
     group = CIVICRM::OptionGroup.where(name: 'membership_status_20121112161808').take
     start = CIVICRM::OptionValue.where(option_group_id: group.id).count
-    self.all.each do |r|
+    records = self.get_all_records
+
+    records.each do |r|
       r.civicrm_models
     end
     done = CIVICRM::OptionValue.where(option_group_id: group.id).count
-    puts "\nCreated: #{done - start} CIVICRM::OptionValue records From ALF::MembershipStatus records\n"
+    puts "Created: #{done - start} CIVICRM::OptionValue records From ALF::MembershipStatus records\n\n"
   end
 
 end

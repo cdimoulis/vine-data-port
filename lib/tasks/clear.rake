@@ -26,7 +26,7 @@ namespace :clear do
 
     # Remove all contacts, prev_ids and relationships
     # Also contact personal info (phone, address, email)
-    CIVICRM::Contact.destroy_all
+    CIVICRM::Contact.remove_all
     CIVICRM::VineContactPrevId.destroy_all
     CIVICRM::Relationship.destroy_all
     CIVICRM::Address.destroy_all

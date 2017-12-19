@@ -59,7 +59,7 @@ class F1::Status < F1::Base
       r.civicrm_models
     end
     done = CIVICRM::OptionValue.where(option_group_id: group.id).count
-    puts "\nCreated: #{done - start} CIVICRM::OptionValue records From F1::Status records\n"
+    puts "Created: #{done - start} CIVICRM::OptionValue records From F1::Status records\n\n"
   end
 
 
