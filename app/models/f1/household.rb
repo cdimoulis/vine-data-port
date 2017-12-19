@@ -68,7 +68,7 @@ class F1::Household < F1::Base
 
     prev_id = prev_id_model(contact)
     if !prev_id.valid? || !prev_id.save
-      raise "Invalid ContactPrevId Model\nCIVICRM::Contact: #{contact.inspect}\nPrevId: #{prev_id.inspect}"
+      raise "Invalid VineContactPrevId Model\nCIVICRM::Contact: #{contact.inspect}\nPrevId: #{prev_id.inspect}"
     end
 
     relationships.each do |rel|
@@ -101,7 +101,7 @@ class F1::Household < F1::Base
   # Pass in a created contact model to associate with this F1 model
   def prev_id_model(contact)
     return if contact.nil? or contact.id.nil? or !CIVICRM::Contact.exists?(contact.id)
-    CIVICRM::ContactPrevId.new(
+    CIVICRM::VineContactPrevId.new(
       contact_id: contact.id,
       f1_id: self.id
     )

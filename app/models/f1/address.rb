@@ -143,9 +143,9 @@ class F1::Address < F1::Base
   #  currently f1 doesn't have a home type so...
   def contact_id
     if self.person_id.present?
-      prev_id = CIVICRM::ContactPrevId.where(f1_id: self.person_id).take
+      prev_id = CIVICRM::VineContactPrevId.where(f1_id: self.person_id).take
     else
-      prev_id = CIVICRM::ContactPrevId.where(f1_id: self.household_id).take
+      prev_id = CIVICRM::VineContactPrevId.where(f1_id: self.household_id).take
     end
 
     return if prev_id.nil?

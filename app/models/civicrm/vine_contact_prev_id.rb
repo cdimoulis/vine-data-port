@@ -12,7 +12,7 @@
 # Holds original fellowship one record id (f1_id) or the alf
 # record (alf_id) for a CIVICRM::Contact model
 
-class CIVICRM::ContactPrevId < CIVICRM::Base
+class CIVICRM::VineContactPrevId < CIVICRM::Base
 
 
 

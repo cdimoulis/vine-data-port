@@ -80,17 +80,17 @@ class ALF::Address < ALF::Base
 
     # if it is HOME type then base off of household
     if addr_type.address_type == 'Home'
-      prev_id = CIVICRM::ContactPrevId.where(alf_id: self.household).take
+      prev_id = CIVICRM::VineContactPrevId.where(alf_id: self.household).take
     else
-      prev_id = CIVICRM::ContactPrevId.where(alf_id: self.person).take
+      prev_id = CIVICRM::VineContactPrevId.where(alf_id: self.person).take
     end
 
     # if no prev_id then base off of what is found
     if prev_id.nil?
       if self.person.present?
-        prev_id = CIVICRM::ContactPrevId.where(alf_id: self.person).take
+        prev_id = CIVICRM::VineContactPrevId.where(alf_id: self.person).take
       else
-        prev_id = CIVICRM::ContactPrevId.where(alf_id: self.household).take
+        prev_id = CIVICRM::VineContactPrevId.where(alf_id: self.household).take
       end
     end
 

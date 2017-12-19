@@ -52,7 +52,7 @@ class ALF::Person < ALF::Base
 
     prev_id = prev_id_model(contact)
     if !prev_id.valid? || !prev_id.save
-      raise "Invalid ContactPrevId Model\nCIVICRM::Contact: #{contact.inspect}\nPrevId: #{prev_id.inspect}"
+      raise "Invalid VineContactPrevId Model\nCIVICRM::Contact: #{contact.inspect}\nPrevId: #{prev_id.inspect}"
     end
     # in case more needs to be done here
   end
@@ -89,7 +89,7 @@ class ALF::Person < ALF::Base
   # Pass in a created contact model to associate with this F1 model
   def prev_id_model(contact)
     return if contact.nil? or contact.id.nil? or !CIVICRM::Contact.exists?(contact.id)
-    CIVICRM::ContactPrevId.new(
+    CIVICRM::VineContactPrevId.new(
       contact_id: contact.id,
       alf_id: self.id
     )
