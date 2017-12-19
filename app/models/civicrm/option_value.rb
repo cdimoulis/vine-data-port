@@ -74,9 +74,33 @@ class CIVICRM::OptionValue < CIVICRM::Base
       )
 
       if value.valid? && value.save
-        puts "Saved #{name} CIVICRM::OptionValue record\n"
+        puts "Saved #{name} CIVICRM::OptionValue record for Phone Types\n"
       else
-        puts "\n\nCould not create new option value #{value.errors.inspect}\n\n"
+        puts "\n\nCould not create new option value Phone Types\n#{value.errors.inspect}\n\n"
+      end
+    end
+  end
+
+
+  # Membership status
+  def self.create_new_membership_status(name)
+    group = CIVICRM::OptionGroup.where(name: 'membership_status_20121112161808').take
+    if group.present? && !self.exists?(option_group_id: group.id, label: name)
+      values = self.where(option_group_id: group.id)
+      weight = values.empty? ? 0 : values.pluck('weight').max + 1
+
+      value = self.new(
+        option_group_id: group.id,
+        label: name,
+        value: name,
+        name: name.gsub(' ', '_'),
+        weight: weight
+      )
+
+      if value.valid? && value.save
+        puts "Save #{name} CIVICRM::OptionValue record for Membership Status\n"
+      else
+        puts "\n\nCould not create new option value for Membership Status\n#{value.errors.inspect}\n\n"
       end
     end
   end

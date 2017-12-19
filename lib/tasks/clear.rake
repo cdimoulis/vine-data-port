@@ -20,11 +20,14 @@ namespace :clear do
 
     # Membership Status
     CIVICRM::ValueAssimilation.destroy_all
+    # Membership Status menu
+    group = CIVICRM::OptionGroup.where(name: 'membership_status_20121112161808').take
+    CIVICRM::OptionValue.where(option_group_id: group.id).destroy_all
 
     # Remove all contacts, prev_ids and relationships
     # Also contact personal info (phone, address, email)
     CIVICRM::Contact.destroy_all
-    CIVICRM::ContactPrevId.destroy_all
+    CIVICRM::VineContactPrevId.destroy_all
     CIVICRM::Relationship.destroy_all
     CIVICRM::Address.destroy_all
     CIVICRM::Email.destroy_all

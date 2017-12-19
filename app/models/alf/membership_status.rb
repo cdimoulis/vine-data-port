@@ -32,4 +32,29 @@ class ALF::MembershipStatus < ALF::Base
     }
   end
 
+
+  ####
+  # CIVICRM model mapping
+  ####
+
+  # The mapping to civicrm
+  def civicrm_models
+    option_value_model
+  end
+
+  def option_value_model
+    CIVICRM::OptionValue.create_new_membership_status membership_status_name
+  end
+
+  # Create all missing models
+  def self.civicrm_create_all
+    group = CIVICRM::OptionGroup.where(name: 'membership_status_20121112161808').take
+    start = CIVICRM::OptionValue.where(option_group_id: group.id).count
+    self.all.each do |r|
+      r.civicrm_models
+    end
+    done = CIVICRM::OptionValue.where(option_group_id: group.id).count
+    puts "\nCreated: #{done - start} CIVICRM::OptionValue records From ALF::MembershipStatus records\n"
+  end
+
 end

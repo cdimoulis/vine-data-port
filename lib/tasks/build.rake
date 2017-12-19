@@ -3,6 +3,11 @@ namespace :build do
     # Build the civicrm Database from F1
     task f1: :environment do
 
+      # Create membership status menus
+      # Yes start with ALF in this case
+      ALF::MembershipStatus.civicrm_create_all
+      F1::Status.civicrm_create_all
+
       # Create people contacts
       F1::Person.all.each do |person|
         person.civicrm_models
