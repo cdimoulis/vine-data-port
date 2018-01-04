@@ -196,8 +196,10 @@ class F1::Address < F1::Base
   #    c. add that id to the record
   def set_location(civicrm_model)
     # Split in case suffix is in postal code
-    zip = self.postal_code.split('-')[0]
-    alf_zip = ALF::Zipcode.where('ZIP', zip).first
+    if self.postal_code.present?
+      zip = self.postal_code.split('-')[0]
+      alf_zip = ALF::Zipcode.where('ZIP', zip).first
+    end
 
     # Set country based on
     country = CIVICRM::Country.where(iso_code: self.country).take
@@ -255,7 +257,7 @@ class F1::Address < F1::Base
       end
 
       # check for county from f1 address model
-      county = CIVICRM::StateProvince.where(abbreviation: self.county).takd
+      county = CIVICRM::StateProvince.where(abbreviation: self.county).take
       if county.present?
         civicrm_model.county_id = county.id
       end
@@ -268,8 +270,10 @@ class F1::Address < F1::Base
     end
 
     # Set zip codes
-    civicrm_model.postal_code = self.postal_code.split('-')[0]
-    civicrm_model.postal_code_suffix = self.postal_code.split('-')[1]
+    if self.postal_code.present?
+      civicrm_model.postal_code = self.postal_code.split('-')[0]
+      civicrm_model.postal_code_suffix = self.postal_code.split('-')[1]
+    end
 
     civicrm_model
   end

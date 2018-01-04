@@ -70,12 +70,12 @@ class F1::CommunicationType < F1::Base
   ####
 
   # The mapping to civicrm
-  def civicrm_models
+  def self.civicrm_models
     telephone_models
   end
 
   # New CIVICRM option value models that need to be created
-  def telephone_models
+  def self.telephone_models
     # Need to create Emergency Option Value
     CIVICRM::OptionValue.create_new_phone_type "Emergency"
   end
