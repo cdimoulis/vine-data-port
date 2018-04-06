@@ -5,6 +5,7 @@ module F1
   end
 
   # Pre load these classes
+  require 'f1/account_type'
   require 'f1/address_type'
   require 'f1/address'
   require 'f1/attribute_group'

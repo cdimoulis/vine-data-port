@@ -118,6 +118,15 @@ class F1::Person < F1::Base
   # CIVICRM model mapping
   ####
 
+  def contact
+    contact_type = CIVICRM::ContactType.where(name: 'Individual').take
+    prev_id = CIVICRM::VineContactPrevId.where(
+      contact_type_id: contact_type.id,
+      f1_id: self.id
+    ).take
+    prev_id.contact
+  end
+
   # The mapping to civicrm
   def civicrm_models
     contact = contact_model()
@@ -175,8 +184,10 @@ class F1::Person < F1::Base
   # Pass in a created contact model to associate with this F1 model
   def prev_id_model(contact)
     return if contact.nil? or contact.id.nil? or !CIVICRM::Contact.exists?(contact.id)
+    contact_type = CIVICRM::ContactType.where(name: 'Individual').take
     CIVICRM::VineContactPrevId.new(
       contact_id: contact.id,
+      contact_type_id: contact_type.id,
       f1_id: self.id
     )
   end

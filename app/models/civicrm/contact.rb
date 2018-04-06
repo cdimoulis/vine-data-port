@@ -74,6 +74,10 @@ class CIVICRM::Contact < CIVICRM::Base
   belongs_to :communication_style, -> { where option_group_id: CIVICRM::OptionGroup.where(name: 'communication_style').take.id }, foreign_key: 'communication_style_id', class_name: CIVICRM::OptionValue.name, primary_key: 'value'
   belongs_to :addressee, -> { where option_group_id: CIVICRM::OptionGroup.where(name: 'addressee').take.id }, foreign_key: 'addressee_id', class_name: CIVICRM::OptionValue.name, primary_key: 'value'
   belongs_to :gender, -> { where option_group_id: CIVICRM::OptionGroup.where(name: 'gender').take.id }, foreign_key: 'gender_id', class_name: CIVICRM::OptionValue.name, primary_key: 'value'
+  has_one :vine_contact_prev_id, foreign_key: 'contact_id', class_name: CIVICRM::VineContactPrevId
+
+  has_many :phones, foreign_key: 'contact_id', class_name: CIVICRM::Phone
+  has_many :addresses, foreign_key: 'contact_id', class_name: CIVICRM::Address
 
 
   # Remove all but necessary contacts

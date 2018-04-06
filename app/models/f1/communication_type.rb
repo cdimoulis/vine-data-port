@@ -8,6 +8,18 @@
 #  name         :string
 #
 
+# 1: Telephone - Home Phone
+# 2: Telephone - Work Phone
+# 3: Telephone - Mobile Phone
+# 138: Telephone - Emergency Phone
+# 5: Email - Home Email
+# 4: Email - Email
+# 6: Email - InFellowship Login
+# 102: Web - Web Address
+# 201: SocialMedia - Facebook
+# 203: SocialMedia - Twitter
+# 202: SocialMedia - Linkedin
+
 class F1::CommunicationType < F1::Base
 
   has_many :communications, class_name: F1::Communication.name

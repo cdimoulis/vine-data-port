@@ -27,6 +27,21 @@ class F1::Base < ActiveRecord::Base
       end
     end
 
+    # boolean uniq if only uniq records
+    def pretty_pluck(uniq=false, *attrs)
+      if uniq
+        vals = self.pluck(*attrs).uniq()
+      else
+        vals = self.pluck(*attrs)
+      end
+
+      str = ''
+      vals.each do |v|
+        str += "#{v}\n"
+      end
+      puts str
+    end
+
     # Show a specific record
     def show_record(id)
       get_response("/#{id}")

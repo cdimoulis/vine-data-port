@@ -28,10 +28,12 @@ module AlfAPI
         begin
           response = Net::HTTP.get uri
         rescue Exception => ex
-
+          puts "\n\nGet Exception #{ex.inspect}\n\n"
         end
-        resp = JSON.parse(response)
-        records = resp[model_name]
+        if response.present?
+          resp = JSON.parse(response)
+          records = resp[model_name]
+        end
         # puts "\n\nRESPONSE #{records.length}\n\n"
         # records.each do |r|
         #   puts "#{r.inspect}\n"

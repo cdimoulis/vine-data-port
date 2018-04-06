@@ -36,15 +36,72 @@
 #  updated_at               :datetime
 #
 
+# Fund_id is what is being given to (tithe, offering)
+# 3 on 3 Basketball Tournament
+# Building giving
+# Cedar Heights Church
+# Cedar Heights Offering
+# Christland Team Offering
+# Church Plant Endowment
+# Church Plant Offering
+# Church Plant Team T&O
+# Future Church Plants
+# Hope and Healing
+# Marriage Retreat
+# Marriage Retreat 2010
+# Missions (for testing purpose)
+# North Building
+# North Pines
+# Offering
+# Online Offering
+# Online Tithe
+# Other
+# Project Compassion
+# Rock Hills Church
+# Rock Hills Offering
+# Scholarships
+# Special Offering
+# Summer & Area Conference
+# Thanksgiving Offering
+# Tithe
+# VFL Registration
+# Whole Church Retreat
+# Women's Conference
+# Women's Retreat
+# Youth Summer Camp
+# Youth Vkids Discipleship Class
+# Youth Winter Retreat
+
+# Sub fund seems not used...
+
+# Activity instance id is NOT used
+
+# Contribution_type_id is
+# 1, "Check"
+# 2, "Cash"
+# 5, "ACH"
+# 3, "Credit Card"
+# 4, "Non-Cash"
+# 6, "Voucher"]
+# Contribution_sub_type_id is specifics like credit card brand
+
+# Pledge Drives
+# 3306 - Test
+# 4456 - North Building
+# 7888 - 2013 Church Plant Offering
+# 11386 - Valley Springs Offering
+# 12580 - North Pines Offering
+# 14476 - Christland Offering
+
 class F1::ContributionReceipt < F1::Base
 
   belongs_to :fund, class_name: F1::Fund.name
   belongs_to :sub_fund, class_name: F1::SubFund.name
   belongs_to :household, class_name: F1::Household.name
   belongs_to :person, class_name: F1::Person.name
-  # belongs_to :batch, class_name: F1::Batch.name
+  belongs_to :batch, class_name: F1::Batch.name
   belongs_to :contribution_type, class_name: F1::ContributionType.name
-  # belongs_to :contribution_sub_type, class_name: F1::ContributionSubType.name
+  belongs_to :contribution_sub_type, class_name: F1::ContributionSubType.name
 
   def self.group
     'giving'
@@ -111,5 +168,58 @@ class F1::ContributionReceipt < F1::Base
     record['updated_by_id'] = record['updated_by_id']['@id']
 
     record
+  end
+
+  ####
+  # CIVICRM model mapping
+  ####
+
+  # The mapping to civicrm
+  def civicrm_models
+    contribution = contribution_model()
+    if !contribution.valid? || !contribution.save
+      raise "Invalid Contribution Model\nF1::ContributionReceipt: #{self.inspect}\nCIVICRM::Contribution: #{contribution.errors.inspect}\n\n"
+    end
+  end
+
+  # Create the contact model
+  def contribution_model
+    c = CIVICRM::Contribution.new(
+      contact_id: self.contact_id,
+      financial_type_id: self.financial_type_id,
+      payment_instrument_id: self.payment_instrument_id,
+    )
+  end
+
+  def contact_id
+    if self.person_id.present?
+      contact_type = CIVICRM::ContactType.where(name: 'Individual').take
+      prev_id = CIVICRM::VineContactPrevId.where(f1_id: self.person_id, contact_type_id: contact_type.id).take
+    else
+      contact_type = CIVICRM::ContactType.where(name: 'Household').take
+      prev_id = CIVICRM::VineContactPrevId.where(f1_id: self.household_id, contact_type_id: contact_type.id).take
+    end
+
+    return if prev_id.nil?
+    contact = CIVICRM::Contact.where(id: prev_id.contact_id).take
+
+    return if contact.nil?
+    return contact.id
+  end
+
+  def financial_type_id
+    # Use fund_id (not batch_id) to get this
+  end
+
+  # TODO: I don't know if CIVICRM Financial type id is the value or the id. Think the value
+  def payment_instrument_id
+    group = F1::OptionGroup.where(name: "payment_instrument").take
+    contribution_type_name = contribution_type.name == 'ACH' ? 'EFT' : contribution_type.name
+    value = F1::OptionValue.where(option_group_id: group.id, name: contribution_type_name).take
+    if value.nil?
+      value = CIVICRM::OptionValue.create_new_payment_instrument(contribution_type_name);
+    end
+
+    value.value
   end
 end

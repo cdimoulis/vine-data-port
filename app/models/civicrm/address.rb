@@ -34,5 +34,7 @@
 
 class CIVICRM::Address < CIVICRM::Base
 
+  belongs_to :contact, foreign_key: 'contact_id', class_name: CIVICRM::Contact
+  belongs_to :location_type, foreign_key: 'location_type_id', class_name: CIVICRM::LocationType
 
 end

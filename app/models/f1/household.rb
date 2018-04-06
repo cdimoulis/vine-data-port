@@ -101,8 +101,10 @@ class F1::Household < F1::Base
   # Pass in a created contact model to associate with this F1 model
   def prev_id_model(contact)
     return if contact.nil? or contact.id.nil? or !CIVICRM::Contact.exists?(contact.id)
+    contact_type = CIVICRM::ContactType.where(name: 'Household').take
     CIVICRM::VineContactPrevId.new(
       contact_id: contact.id,
+      contact_type_id: contact_type.id,
       f1_id: self.id
     )
   end
@@ -208,8 +210,8 @@ class F1::Household < F1::Base
         # add to parents
         if head.present?
           chr = CIVICRM::Relationship.new(
-            contact_id_a: child.id,
-            contact_id_b: head.id,
+            contact_id_a: head.id,
+            contact_id_b: child.id,
             relationship_type_id: child_parent.id
           )
           rels.push chr
@@ -219,8 +221,8 @@ class F1::Household < F1::Base
         # add spouse to parents
         if spouse.present?
           csr = CIVICRM::Relationship.new(
-            contact_id_a: child.id,
-            contact_id_b: spouse.id,
+            contact_id_a: spouse.id,
+            contact_id_b: child.id,
             relationship_type_id: child_parent.id
           )
           rels.push csr

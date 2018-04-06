@@ -11,6 +11,21 @@
 # | is_default   | tinyint(4)       | YES  |     | NULL    |                |
 # +--------------+------------------+------+-----+---------+----------------+
 
+# 1: Home
+# 2: Work
+# 3: Main
+# 4: Other
+# 5: Billing
+# 6: Primary
+# 7: Secondary
+# 8: College
+# 9: Vacation
+# 10: Business
+# 11: Org
+# 12: Previous
+# 13: Statement
+# 14: Mail Returned Incorrect
+
 
 class CIVICRM::LocationType < CIVICRM::Base
 

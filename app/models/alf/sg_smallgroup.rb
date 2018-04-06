@@ -1,7 +1,11 @@
 class ALF::SgSmallgroup < ALF::Base
   # -*- SkipSchemaAnnotations
 
-  attr_accessor :smallgroup_id, :leader, :include_spouse, :dc, :smallgroup_start_date, :smallgroup_end_date, :smallgroup_active, :meets_at, :smallgroup_start_time, :smallgroup_end_time, :childcare, :allow_phone, :allow_email, :Description, :picture, :contact_phone, :contact_email, :meets_on
+  attr_accessor :smallgroup_id, :leader, :include_spouse, :dc,
+    :smallgroup_start_date, :smallgroup_end_date, :smallgroup_active,
+    :meets_at, :smallgroup_start_time, :smallgroup_end_time, :childcare,
+    :allow_phone, :allow_email, :Description, :picture, :contact_phone,
+    :contact_email, :meets_on
 
   # Name to be sent in request to API
   def self.alf_name

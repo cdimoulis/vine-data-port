@@ -1,7 +1,7 @@
 namespace :build do
   namespace :civicrm do
-    # Build the civicrm Database from F1
-    task f1: :environment do
+    # Build the civicrm contacts from F1 people and households
+    task f1_people: :environment do
 
       # Create membership status menus
       # Yes start with ALF in this case
@@ -41,6 +41,11 @@ namespace :build do
         comm.civicrm_models
       end
       puts "CIVICRM created #{CIVICRM::Email.count} Emails and #{CIVICRM::Phone.count} Phones\n"
+    end
+
+    # build the CIVICRM contributions from f1
+    task f1_contributions: :environment do
+      
     end
   end
 end

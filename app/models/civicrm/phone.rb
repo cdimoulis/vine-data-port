@@ -15,5 +15,8 @@
 
 class CIVICRM::Phone < CIVICRM::Base
 
+  belongs_to :contact, foreign_key: 'contact_id', class_name: CIVICRM::Contact
+  belongs_to :location_type, foreign_key: 'location_type_id', class_name: CIVICRM::LocationType
+  belongs_to :phone_type, -> { where option_group_id: CIVICRM::OptionGroup.where(name: 'phone_type').take.id }, foreign_key: 'phone_type_id', class_name: CIVICRM::OptionValue.name, primary_key: 'id'
 
 end

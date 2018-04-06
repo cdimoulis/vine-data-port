@@ -16,6 +16,9 @@
 #  updated_at                 :datetime         not null
 #
 
+# Bad Values
+# communication_value: 'AyricaClutts 618-201-0990 or 618-697-0259'
+
 class F1::Communication < F1::Base
 
   belongs_to :communication_type, class_name: F1::CommunicationType.name
@@ -117,31 +120,43 @@ class F1::Communication < F1::Base
   def email_model
     # If there is a person id then the person_id is the contact id for emails
     if !person_id.nil?
+      contact_type = CIVICRM::ContactType.where(name: 'Individual').take
       contact_id = person_id
     # Otherwise find the household
     else
+      contact_type = CIVICRM::ContactType.where(name: 'Household').take
       household = F1::Household.where(id: household_id).take
       # If there are people
       if household.present? && household.people.count > 0
         # Get the head of house
         head = F1::HouseholdMemberType.where(name: 'Head').take
-        person = household.people.where(household_member_type: head.id)
+        person = household.people.where(household_member_type: head.id).take
         if person.present?
+          contact_type = CIVICRM::ContactType.where(name: 'Individual').take
           contact_id = person.id
         # Otherwise get the first person
         else
+          contact_type = CIVICRM::ContactType.where(name: 'Individual').take
           contact_id = household.people.first.id
         end
       end
     end
+    # Get civicrm contact id from vine contact prev id table
+    prev_id = CIVICRM::VineContactPrevId.where(f1_id: contact_id, contact_type_id: contact_type.id).take
+    loc_type = CIVICRM::LocationType.where(name: 'Other').take
 
-    type = CIVICRM::LocationType.where(name: 'Home').take
+    # Main and secondary email
+    if self.communication_type.name == "InFellowship Login"
+      loc_type = CIVICRM::LocationType.where(name: 'Main').take
+    elsif self.communication_type.name == "Email"
+      loc_type = CIVICRM::LocationType.where(name: 'Secondary').take
+    end
 
     CIVICRM::Email.new(
-      contact_id: contact_id,
-      location_type_id: type.id,
+      contact_id: prev_id.contact_id,
+      location_type_id: loc_type.id,
       email: communication_value,
-      is_primary: preferred
+      is_primary: self.preferred
     )
   end
 
@@ -150,14 +165,20 @@ class F1::Communication < F1::Base
     phone_type = communication_type.name.sub(' Phone', '')
     # Home phone is household
     if phone_type == 'Home'
+      contact_type = CIVICRM::ContactType.where(name: 'Household').take
       contact_id = household_id
     # Other wise it is individual
     elsif !person_id.nil?
+      contact_type = CIVICRM::ContactType.where(name: 'Individual').take
       contact_id = person_id
     # Unless the individual doesn't exist
     else
+      contact_type = CIVICRM::ContactType.where(name: 'Household').take
       contact_id = household_id
     end
+
+    # The contact_id in CIVICRM
+    prev_id = CIVICRM::VineContactPrevId.where(f1_id: contact_id, contact_type_id: contact_type.id).take
 
     # TYPES per discussing with Jason
     # F1            ->     CIVICRM(locationType - option_value)
@@ -176,17 +197,19 @@ class F1::Communication < F1::Base
     end
 
     # If phone type is not Home then find it. otherwise type is Phone
-    phn_type = types.where(name: phone_type).take
+    phn_type = civi_types.where(name: phone_type).take
     if phn_type.nil?
-      phn_type = types.where(name: 'Phone').take
+      phn_type = civi_types.where(name: 'Phone').take
     end
 
-    CIVICRM::Phone.new(
-      contact_id: contact_id,
-      location_type_id: loc_type.id,
-      phone: communication_value,
-      is_primary: preferred,
-      phone_type_id: phn_type.id
-    )
+    if communication_value.length <= 32
+      CIVICRM::Phone.new(
+        contact_id: prev_id.contact_id,
+        location_type_id: loc_type.id,
+        phone: communication_value,
+        is_primary: preferred,
+        phone_type_id: phn_type.value
+      )
+    end
   end
 end

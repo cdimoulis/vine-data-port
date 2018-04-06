@@ -3194,13 +3194,15 @@ ActiveRecord::Schema.define(version: 20171127170428) do
   end
 
   create_table "civicrm_vine_contact_prev_id", force: :cascade do |t|
-    t.integer "contact_id", limit: 4, null: false
-    t.integer "f1_id",      limit: 4
-    t.integer "alf_id",     limit: 4
+    t.integer "contact_id",      limit: 4, null: false
+    t.integer "contact_type_id", limit: 4, null: false
+    t.integer "f1_id",           limit: 4
+    t.integer "alf_id",          limit: 4
   end
 
   add_index "civicrm_vine_contact_prev_id", ["alf_id"], name: "index_civicrm_vine_contact_prev_id_on_alf_id", using: :btree
   add_index "civicrm_vine_contact_prev_id", ["contact_id"], name: "index_civicrm_vine_contact_prev_id_on_contact_id", using: :btree
+  add_index "civicrm_vine_contact_prev_id", ["contact_type_id"], name: "index_civicrm_vine_contact_prev_id_on_contact_type_id", using: :btree
   add_index "civicrm_vine_contact_prev_id", ["f1_id"], name: "index_civicrm_vine_contact_prev_id_on_f1_id", using: :btree
 
   create_table "civicrm_volunteer_need", force: :cascade do |t|

@@ -16,6 +16,10 @@
 #  updated_at     :datetime
 #
 
+# INcludes offering, tithe, and other giving 'categories'
+
+# Names: ["3 on 3 Basketball Tournament", "Building giving", "Cedar Heights Church", "Cedar Heights Offering", "Christland Team Offering", "Church Plant Endowment", "Church Plant Offering", "Church Plant Team T&O", "Future Church Plants", "Hope and Healing", "Marriage Retreat", "Marriage Retreat 2010", "Missions (for testing purpose)", "North Building", "North Pines", "Offering", "Online Offering", "Online Tithe", "Other", "Project Compassion", "Rock Hills Church", "Rock Hills Offering", "Scholarships", "Special Offering", "Summer & Area Conference", "Thanksgiving Offering", "Tithe", "VFL Registration", "Whole Church Retreat", "Women's Conference", "Women's Retreat", "Youth Summer Camp", "Youth Vkids Discipleship Class", "Youth Winter Retreat"]
+
 class F1::Fund < F1::Base
 
   belongs_to :fund_type, class_name: F1::FundType.name
