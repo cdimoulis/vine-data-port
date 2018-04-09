@@ -9,7 +9,18 @@
 # | is_active     | tinyint(4)       | YES  |     | NULL    |                |
 # +---------------+------------------+------+-----+---------+----------------+
 
-# Names: ["Donation", "Member Dues", "Campaign Contribution", "Event Fee", "None", "Volunteer", "Tithe", "Offering", "Land Offering", "Building Offering", "Church Plant Offering"]
+# Original Names:
+#     Donation
+#     Member Dues
+#     Campaign Contribution
+#     Event Fee
+#     None
+#     Volunteer
+#     Tithe
+#     Offering
+#     Land Offering
+#     Building Offering
+#     Church Plant Offering
 
 class CIVICRM::FinancialType < CIVICRM::Base
 

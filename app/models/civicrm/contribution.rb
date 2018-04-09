@@ -44,7 +44,7 @@
 # 73: 5 - EFT
 # 795: 6 - Stock
 
-# FinancialTypes =
+# FinancialTypes original names =
 # 1, "Donation"
 # 2, "Member Dues"
 # 3, "Campaign Contribution"
