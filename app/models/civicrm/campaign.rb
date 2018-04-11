@@ -52,8 +52,8 @@ class CIVICRM::Campaign < CIVICRM::Base
   # This is different than normal. We don't have a F1 Pledge Drive model since
   # it is not accessible from the API. This was all taken off F1 manually
   def self.f1_pledge_drives
-    ['North Building', '2013 Church Plant Offering', 'Valley Springs Offering',
-     'North Pines Offering', 'Christland Offering']
+    ['Test', 'North Building', '2013 Church Plant Offering',
+     'Valley Springs Offering', 'North Pines Offering', 'Christland Offering']
   end
 
   def self.build_models

@@ -60,6 +60,7 @@ class F1::Fund < F1::Base
 
   belongs_to :fund_type, class_name: F1::FundType.name
   has_many :sub_fund, class_name: F1::SubFund.name
+  has_many :contribution_receipts
 
   def self.group
     'giving'

@@ -34,6 +34,16 @@
 
 # contribution_status_id is found in the Option Value Table as option_group_id = 11
 # or OptionGroup name = contribution_status
+#   74: 1 - Completed
+#   75: 2 - Pending
+#   76: 3 - Cancelled
+#   77: 4 - Failed
+#   78: 5 - In Progress
+#   79: 6 - Overdue
+#   826: 7 - Refunded
+#   897: 8 - Partially paid
+#   898: 9 - Pending refund
+#   1061: 10 - Chargeback
 
 # payment_instrument_id is found in the Option Value Table as option_group_id = 10
 # or OptionGroup name = payment_instrument

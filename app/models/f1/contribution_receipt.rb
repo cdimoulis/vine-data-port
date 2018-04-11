@@ -77,12 +77,12 @@
 # Activity instance id is NOT used
 
 # Contribution_type_id is
-# 1, "Check"
-# 2, "Cash"
-# 5, "ACH"
-# 3, "Credit Card"
-# 4, "Non-Cash"
-# 6, "Voucher"]
+#   1, "Check"
+#   2, "Cash"
+#   3, "Credit Card"
+#   4, "Non-Cash"
+#   5, "ACH"
+#   6, "Voucher"]
 # Contribution_sub_type_id is specifics like credit card brand
 
 # Pledge Drives
@@ -174,6 +174,17 @@ class F1::ContributionReceipt < F1::Base
   # CIVICRM model mapping
   ####
 
+  def self.pledge_drives
+    {
+      3306 => 'Test'
+      4456 => 'North Building'
+      7888 => '2013 Church Plant Offering'
+      11386 => 'Valley Springs Offering'
+      12580 => 'North Pines Offering'
+      14476 => 'Christland Offering'
+    }
+  end
+
   # The mapping to civicrm
   def civicrm_models
     contribution = contribution_model()
@@ -188,6 +199,9 @@ class F1::ContributionReceipt < F1::Base
       contact_id: self.contact_id,
       financial_type_id: self.financial_type_id,
       payment_instrument_id: self.payment_instrument_id,
+      receive_date: self.received_date,
+      total_amount: self.amount,
+      campaign_id: self.campaign_id,
     )
   end
 
@@ -209,6 +223,9 @@ class F1::ContributionReceipt < F1::Base
 
   def financial_type_id
     # Use fund_id (not batch_id) to get this
+    ft = CIVICRM::FinancialType.where(name: self.fund.name).take
+
+    ft.id
   end
 
   # TODO: I don't know if CIVICRM Financial type id is the value or the id. Think the value
@@ -221,5 +238,11 @@ class F1::ContributionReceipt < F1::Base
     end
 
     value.value
+  end
+
+  def campaign_id
+    pledge_name = F1::ContributionReceipt.pledge_drives[self.pledge_drive_id];
+    campaign = CIVICRM::Campaign.where(name: pledge_name).take
+    campaign.id
   end
 end
