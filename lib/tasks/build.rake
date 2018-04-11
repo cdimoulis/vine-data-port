@@ -45,8 +45,10 @@ namespace :build do
 
     # build the CIVICRM contributions from f1
     task f1_contributions: :environment do
-      
+
       F1::Fund.civicrm_create_all
+      CIVICRM::Campaign.build_models
+      
     end
   end
 end

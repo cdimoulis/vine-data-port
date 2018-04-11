@@ -86,12 +86,12 @@
 # Contribution_sub_type_id is specifics like credit card brand
 
 # Pledge Drives
-# 3306 - Test
-# 4456 - North Building
-# 7888 - 2013 Church Plant Offering
-# 11386 - Valley Springs Offering
-# 12580 - North Pines Offering
-# 14476 - Christland Offering
+#   3306 - Test
+#   4456 - North Building
+#   7888 - 2013 Church Plant Offering
+#   11386 - Valley Springs Offering
+#   12580 - North Pines Offering
+#   14476 - Christland Offering
 
 class F1::ContributionReceipt < F1::Base
 

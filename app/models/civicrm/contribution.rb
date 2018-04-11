@@ -57,11 +57,20 @@
 # 10, "Building Offering"
 # 11, "Church Plant Offering"]
 
+
+# F1 Pledge Drives which will be mapped to campaigns
+#   3306 - Test
+#   4456 - North Building
+#   7888 - 2013 Church Plant Offering
+#   11386 - Valley Springs Offering
+#   12580 - North Pines Offering
+#   14476 - Christland Offering
+
 # trxn_id probably ties to civicrm_financial_trxn table
 
 
 class CIVICRM::Contribution < CIVICRM::Base
 
-
+  belongs_to :campaign, foreign_key: 'campaign_id', class_name: CIVICRM::Campaign.name
 
 end

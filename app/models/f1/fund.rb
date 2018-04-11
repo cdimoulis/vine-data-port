@@ -107,7 +107,7 @@ class F1::Fund < F1::Base
 
   # Create the contact model
   def contribution_model
-    c = CIVICRM::FinancialType.new(
+    CIVICRM::FinancialType.new(
       name: self.name,
       is_deductible: fund_type.name == "Contribution",
       is_active: is_active

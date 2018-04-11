@@ -43,6 +43,7 @@ namespace :clear do
     task contributions: :environment do
       CIVICRM::Contribution.destroy_all
       CIVICRM::FinancialType.destroy_all
+      CIVICRM::Campaign.destroy_all
     end
   end
 end
