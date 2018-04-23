@@ -176,11 +176,11 @@ class F1::ContributionReceipt < F1::Base
 
   def self.pledge_drives
     {
-      3306 => 'Test'
-      4456 => 'North Building'
-      7888 => '2013 Church Plant Offering'
-      11386 => 'Valley Springs Offering'
-      12580 => 'North Pines Offering'
+      3306 => 'Test',
+      4456 => 'North Building',
+      7888 => '2013 Church Plant Offering',
+      11386 => 'Valley Springs Offering',
+      12580 => 'North Pines Offering',
       14476 => 'Christland Offering'
     }
   end
@@ -209,9 +209,12 @@ class F1::ContributionReceipt < F1::Base
     if self.person_id.present?
       contact_type = CIVICRM::ContactType.where(name: 'Individual').take
       prev_id = CIVICRM::VineContactPrevId.where(f1_id: self.person_id, contact_type_id: contact_type.id).take
-    else
+    elsif self.household_id.present?
       contact_type = CIVICRM::ContactType.where(name: 'Household').take
       prev_id = CIVICRM::VineContactPrevId.where(f1_id: self.household_id, contact_type_id: contact_type.id).take
+    else
+      contact = CIVICRM::Contact.where(first_name: 'Anonymous', last_name: 'Contribution').take
+      return contact.id
     end
 
     return if prev_id.nil?
@@ -230,9 +233,9 @@ class F1::ContributionReceipt < F1::Base
 
   # TODO: I don't know if CIVICRM Financial type id is the value or the id. Think the value
   def payment_instrument_id
-    group = F1::OptionGroup.where(name: "payment_instrument").take
+    group = CIVICRM::OptionGroup.where(name: "payment_instrument").take
     contribution_type_name = contribution_type.name == 'ACH' ? 'EFT' : contribution_type.name
-    value = F1::OptionValue.where(option_group_id: group.id, name: contribution_type_name).take
+    value = CIVICRM::OptionValue.where(option_group_id: group.id, name: contribution_type_name).take
     if value.nil?
       value = CIVICRM::OptionValue.create_new_payment_instrument(contribution_type_name);
     end
@@ -241,8 +244,20 @@ class F1::ContributionReceipt < F1::Base
   end
 
   def campaign_id
-    pledge_name = F1::ContributionReceipt.pledge_drives[self.pledge_drive_id];
-    campaign = CIVICRM::Campaign.where(name: pledge_name).take
-    campaign.id
+    if self.pledge_drive_id.present?
+      pledge_name = F1::ContributionReceipt.pledge_drives[self.pledge_drive_id];
+      campaign = CIVICRM::Campaign.where(name: pledge_name).take
+      campaign.id
+    end
   end
+
+  # Create all missing models
+  def self.civicrm_create_all
+    start = CIVICRM::Contribution.count
+    F1::ContributionReceipt.all.each do |c|
+      c.civicrm_models()
+    end
+    puts "\nCreated: #{CIVICRM::Contribution.count - start} CIVICRM::Contribution records From F1::Fund records\n"
+  end
+
 end

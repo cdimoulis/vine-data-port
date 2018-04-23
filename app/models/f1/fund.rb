@@ -100,14 +100,14 @@ class F1::Fund < F1::Base
 
   # The mapping to civicrm
   def civicrm_models
-    fund = fund_model()
+    fund = financial_type_model()
     if !fund.valid? || !fund.save
       raise "Invalid Fund Model\nF1::Fund: #{self.inspect}\nCIVICRM::FinancialType: #{fund.errors.inspect}\n\n"
     end
   end
 
   # Create the contact model
-  def contribution_model
+  def financial_type_model
     CIVICRM::FinancialType.new(
       name: self.name,
       is_deductible: fund_type.name == "Contribution",
@@ -119,7 +119,10 @@ class F1::Fund < F1::Base
   def self.civicrm_create_all
     start = CIVICRM::FinancialType.count
     F1::Fund.all.each do |f|
-      f.civicrm_models()
+      found = CIVICRM::FinancialType.where(name: f.name).take
+      if (found.nil?)
+        f.civicrm_models()
+      end
     end
     puts "\nCreated: #{CIVICRM::FinancialType.count - start} CIVICRM::FinancialType records From F1::Fund records\n"
   end

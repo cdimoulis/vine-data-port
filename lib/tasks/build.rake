@@ -48,7 +48,20 @@ namespace :build do
 
       F1::Fund.civicrm_create_all
       CIVICRM::Campaign.build_models
-      
+
+      # Build the Anonymous Cash user.
+      cash = CIVICRM::Contact.new(
+        first_name: "Anonymous",
+        last_name: "Contribution",
+        contact_type: 'Individual',
+      )
+
+      if !cash.valid? || !cash.save
+        raise "Invalid Contact Model for Anonymous Cash\nCIVICRM::Contact: #{cash.errors.inspect}"
+      end
+
+      F1::ContributionReceipt.civicrm_create_all
+
     end
   end
 end

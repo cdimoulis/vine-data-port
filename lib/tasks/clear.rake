@@ -1,5 +1,5 @@
 namespace :clear do
-  task people: :environment do
+  task f1: :environment do
     models = F1.constants.select {|c| F1.const_get(c).is_a? Class}
     models.each do |model|
       name = "F1::#{model}"
@@ -15,6 +15,7 @@ namespace :clear do
 
   namespace :civicrm do
     task all: :environment do
+      Rake::Task['clear:civicrm:contributions'].invoke
       Rake::Task['clear:civicrm:contact'].invoke
     end
 
@@ -42,7 +43,6 @@ namespace :clear do
 
     task contributions: :environment do
       CIVICRM::Contribution.destroy_all
-      CIVICRM::FinancialType.destroy_all
       CIVICRM::Campaign.destroy_all
     end
   end

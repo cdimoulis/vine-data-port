@@ -52,7 +52,8 @@ class F1::Base < ActiveRecord::Base
       # Rails.logger.warn "\nNo method to get all records implemented for: #{self.name}\n"
       records = []
       response = get_response(extra_route, data)
-      records += get_response_records(response)
+      resp_records = get_response_records(response)
+      records += resp_records
       page = get_page_data(response)
       if page.present?
         @total_records = page['@totalRecords'].to_i

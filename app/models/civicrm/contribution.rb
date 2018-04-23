@@ -83,4 +83,6 @@ class CIVICRM::Contribution < CIVICRM::Base
 
   belongs_to :campaign, foreign_key: 'campaign_id', class_name: CIVICRM::Campaign.name
 
+  validates :contact_id, presence: true
+
 end

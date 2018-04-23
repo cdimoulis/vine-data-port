@@ -57,12 +57,16 @@ class CIVICRM::Campaign < CIVICRM::Base
   end
 
   def self.build_models
+    count = 0;
     f1_pledge_drives.each do |d|
       m = civicrm_model(d)
-      if !m.valid || !m.save
+      if !m.valid? || !m.save
         raise "Invalid Campaign model#{d}\n#{m.errors.inspect}\n\n"
+      else
+        count += 1
       end
     end
+    puts "\nCreated #{count} CIVICRM::Campaign records from pledge drives\n"
   end
 
 

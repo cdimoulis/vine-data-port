@@ -107,9 +107,9 @@ class CIVICRM::OptionValue < CIVICRM::Base
 
   # FinancialType
   def self.create_new_payment_instrument(name)
-    group = CIVICRM::OptionGroup.where(name: 'payment_instrument')
+    group = CIVICRM::OptionGroup.where(name: 'payment_instrument').take
     if group.present? && !self.exists?(option_group_id: group.id, label: name)
-      value = self.where(option_group_id: group_id)
+      values = self.where(option_group_id: group.id)
       weight = values.empty? ? 0 : values.pluck('weight').max + 1
 
       value = self.new(
