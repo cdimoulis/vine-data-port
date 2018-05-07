@@ -1,4 +1,10 @@
 namespace :populate do
+  task all: :environment do
+    Rake::Task['populate:people'].invoke
+    Rake::Task['populate:group'].invoke
+    Rake::Task['populate:event'].invoke
+    Rake::Task['populate:giving'].invoke
+  end
   # These must be done in a particular order to work so we
   # cannot automate it like with clear and info tasks
   task people: :environment do

@@ -67,6 +67,7 @@ class F1::Person < F1::Base
     {
       attributes: nil,
       addresses: nil,
+      communications: nil,
       denomination: 'denomination_id',
       householdMemberType: 'household_member_type_id',
       gender: 'gender_id',
