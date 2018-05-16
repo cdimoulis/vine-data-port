@@ -63,5 +63,57 @@ namespace :build do
       F1::ContributionReceipt.civicrm_create_all
 
     end
+
+    task date_limit: :environment do
+      require 'csv'
+      u = CIVICRM::Contact.where(first_name: 'Anonymous', last_name: 'Contribution').take
+      ids = [u.id]
+      indiv_type = CIVICRM::ContactType.where(name: 'Individual').take
+
+      # Activity IDs
+      text = File.read('db/event_attendance.csv')
+      csv = CSV.parse(text, :headers=>true)
+      act_ids = csv.map do |x|
+        prev = CIVICRM::VineContactPrevId.where(f1_id: x['Individual ID'], contact_type_id: indiv_type.id).take
+        if prev.present?
+          prev.contact_id
+        end
+      end
+      puts "\n\nids #{act_ids.count}\n\n"
+      act_ids = act_ids.uniq
+      puts "\n\nids2 #{act_ids.count}\n\n"
+      ids.concat(act_ids)
+
+      # Contribution Ids
+      contrib_ids = CIVICRM::Contribution::where('receive_date >= ?', '2017-07-01').pluck('contact_id').uniq
+      puts "\n\ncontrib ids #{contrib_ids.count}\n\n"
+
+      ids = ids.concat(contrib_ids).uniq;
+      puts "\n\nids #{ids.count}\n\n"
+
+      contacts = CIVICRM::Contact.where('id in (?)',ids)
+      indivs = contacts.where(contact_type: 'Individual')
+
+      households = indivs.map do |i|
+        types = CIVICRM::RelationshipType.where(contact_type_a: 'Individual', contact_type_b:'Household')
+        rels = CIVICRM::Relationship.where(contact_id_a: i.id).where(relationship_type_id: types.pluck('id'))
+        rels.pluck('contact_id_b')
+      end
+
+      households = households.flatten.uniq
+      puts "\n\nhouseholds: #{households}\n\n"
+      ids = ids.concat(households).uniq
+
+      puts "\n\nFINAL IDS #{ids}\n#{ids.count}\n\n"
+
+      # Remove unecessary records
+      rem_contrib = CIVICRM::Contribution::where('receive_date < ?', '2017-07-01')
+      puts "\n\nREMOVE CONTRIB: #{rem_contrib.count} out of #{CIVICRM::Contribution.count}\n\n"
+      # rem_contrib.destroy_all
+      rem_contacts = CIVICRM::Contact.where.not(id: ids)
+      puts "\n\nREMOVE Contacts: #{rem_contacts.count} out of #{CIVICRM::Contact.count}\n\n"
+      # rem_contacts.destroy_all
+
+    end
   end
 end
