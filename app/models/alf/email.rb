@@ -15,6 +15,12 @@ class ALF::Email < ALF::Base
     'email_id'
   end
 
+  def self.alf_belongs_to
+    {
+      :email_type => {class: "ALF::EmailType"},
+    }
+  end
+
   # Belongs to associations
   # :association_name => {class: 'ALF::Classname',
   #                 through: 'attribute in model',

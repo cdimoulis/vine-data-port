@@ -44,7 +44,7 @@ class ALF::Person < ALF::Base
   ####
 
   # The mapping for civicrm
-  def civicrm_map
+  def civicrm_models
     contact = contact_model()
     if !contact.valid? || !contact.save
       raise "Invalid Contact Model\nALF::Person: #{self.inspect}\nCIVICRM::Contact: #{contact.errors.inspect}"
@@ -59,7 +59,9 @@ class ALF::Person < ALF::Base
     if !prev_id.valid? || !prev_id.save
       raise "Invalid VineContactPrevId Model\nCIVICRM::Contact: #{contact.inspect}\nPrevId: #{prev_id.inspect}"
     end
-    # in case more needs to be done here
+
+    civicrm_emails
+    civicrm_phones
   end
 
   def contact_model
@@ -175,4 +177,95 @@ class ALF::Person < ALF::Base
     return nil
   end
 
+  # Save the emails, addresses and phones
+  def civicrm_emails
+    emails = ALF::Emails.where('person', self.person_id)
+    prev_id = CIVICRM::VineContactPrevId.where(alf_id: self.person_id).take.contact_id;
+    contact = CIVICRM::Contact.find(prev_id)
+
+    emails.each do |e|
+      e_type = ALF::EmailType.findId(e.email_type)
+
+      if e_type.email_type == 'Personal'
+        loc_type = CIVICRM::LocationType.where(name: 'Main').take
+      else
+        loc_type = CIVICRM::LocationType.where(name: 'Secondary').take
+      end
+
+      email = CIVICRM::Email.new(
+        contact_id: contact.id,
+        email: e.email_address,
+        location_type_id: loc_type.id,
+      )
+
+      if !email.valid || !email.save
+        raise "Invalid Email Model\nCIVICRM::Email: #{email.inspect}\nALF::Email: #{e.inspect}"
+      end
+    end
+
+  end
+
+  def civicrm_addresses
+
+  end
+
+  def civicrm_phones
+    phones = ALF::Phones.where('person', self.person_id)
+    civi_types = CIVICRM::OptionGroup.where(title: 'Phone Type').take.option_values
+    prev_id = CIVICRM::VineContactPrevId.where(alf_id: self.person_id).take.contact_id;
+    contact = CIVICRM::Contact.find(prev_id)
+
+    phones.each do |p|
+      p_type = ALF::PhoneType.findId(p.phone_type)
+
+      if p_type.phone_type == 'Work'
+        loc_type = CIVICRM::LocationType.where(name: 'Work').take
+      else
+        loc_type = CIVICRM::LocationType.where(name: 'Home').take
+      end
+
+      phn_type = civi_types.where(name: p_type.phone_type).take
+      if phn_type.nil?
+        phn_type = civic_types.where(name: 'Phone').take
+      end
+
+      phone = CIVICRM::Phone.new(
+        contact_id: contact.id,
+        location_type_id: loc_type.id,
+        phone: p.phone_number,
+        phone_type_id: phn_type.id
+      )
+
+      if !phone.valid || !phone.save
+        raise "Invalid Phone Model\nCIVICRM::Phone: #{phone.inspect}\nALF::Phone: #{p.inspect}"
+      end
+  end
+
+  # Set relationship to household
+  def householdRelation()
+    p_prev_id = CIVICRM::VineContactPrevId.where(alf_id: self.person_id).take.contact_id;
+    h_prev_id = CIVICRM::VineContactPrevId.where(alf_id: self.household).take.contact_id;
+    person = CIVICRM::Contact.find(p_prev_id)
+    house = CIVICRM::Contact.find(h_prev_id)
+
+    household_type = ALF::HouseholdPosition.findId(self.household_position)
+    member_household = CIVICRM::RelationshipType.where(id: 7).take
+    head_household = CIVICRM::RelationshipType.where(id: 6).take
+
+    if household_type.household_position_name == "Head"
+      rel = CIVICRM::Relationship.new(
+        contact_id_a: person.id,
+        contact_id_b: house.id,
+        relationship_type_id: head_household.id
+      )
+    else
+      rel = CIVICRM::Relationship.new(
+        contact_id_a: person.id,
+        contact_id_b: house.id,
+        relationship_type_id: member_household.id
+      )
+    end
+
+    rel.save
+  end
 end

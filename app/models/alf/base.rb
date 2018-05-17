@@ -189,6 +189,12 @@ class ALF::Base #< ActiveRecord::Base
       puts str
     end
 
+    # Get single record by id
+    def findId(id, path=nil, data=nil)
+      records = where(id_attribute, id, path, nil)
+      records[0]
+    end
+
     #####
     # OVERRIDES
     #####

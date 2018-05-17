@@ -64,6 +64,30 @@ namespace :build do
 
     end
 
+    task alf_people: :environment do
+      # ALF IDs
+      text = File.read('db/event_attendance.csv')
+      alf_ids = text.gsub("\"","").split("\n")
+
+      # hh_positions = ALF::HouseholdPosition.get_all_records
+      # pos_map = hh_positions.map do |h|
+      #   {h.household_position_id]=>h.household_position_name}
+      # end
+
+      alf_ids.each do |id|
+        # Create the person and household contact models
+        alf_person = ALF::Person.findId(id)
+        alf_person.civicrm_models
+        alf_household = ALF::Household.findId(alf_person.household)
+        alf_household.civicrm_models
+
+        # Relate the person to the household
+        alf_person.householdRelation
+
+
+      end
+    end
+
     task date_limit: :environment do
       require 'csv'
       u = CIVICRM::Contact.where(first_name: 'Anonymous', last_name: 'Contribution').take
