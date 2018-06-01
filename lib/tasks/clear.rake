@@ -46,4 +46,39 @@ namespace :clear do
       CIVICRM::Campaign.destroy_all
     end
   end
+
+  namespace :alf do
+    task all: :environment do
+      Rake::Task['clear:alf:contact'].invoke
+    end
+
+    task contact: :environment do
+      prevs = CIVICRM::VineContactPrevId.where.not(alf_id: nil)
+
+      prevs.each do |prev|
+        contact = CIVICRM::Contact.find(prev.contact_id)
+
+        value_assimilation_model = CIVICRM::ValueAssimilation.where(entity_id: contact.id).take
+        value_assimilation_model.destroy if !value_assimilation_model.nil?
+
+        emails = CIVICRM::Email.where(contact_id: contact.id)
+        emails.destroy_all
+
+        phones = CIVICRM::Phone.where(contact_id: contact.id)
+        phones.destroy_all
+
+        addresses = CIVICRM::Address.where(contact_id: contact.id)
+        addresses.destroy_all
+
+        relsa = CIVICRM::Relationship.where(contact_id_a: contact.id)
+        relsa.destroy_all
+        relsb = CIVICRM::Relationship.where(contact_id_b: contact.id)
+        relsb.destroy_all
+
+        contact.destroy
+      end
+
+      prevs.destroy_all
+    end
+  end
 end

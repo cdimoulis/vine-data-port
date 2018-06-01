@@ -66,26 +66,21 @@ namespace :build do
 
     task alf_people: :environment do
       # ALF IDs
-      text = File.read('db/event_attendance.csv')
+      text = File.read('db/reporting_sg_attendance.csv')
       alf_ids = text.gsub("\"","").split("\n")
-
-      # hh_positions = ALF::HouseholdPosition.get_all_records
-      # pos_map = hh_positions.map do |h|
-      #   {h.household_position_id]=>h.household_position_name}
-      # end
-
+      # puts "\n\n#{alf_ids.inspect}\n\n"
       alf_ids.each do |id|
         # Create the person and household contact models
         alf_person = ALF::Person.findId(id)
         alf_person.civicrm_models
         alf_household = ALF::Household.findId(alf_person.household)
-        alf_household.civicrm_models
+        alf_household.civicrm_models if !alf_household.nil?
 
         # Relate the person to the household
         alf_person.householdRelation
-
-
       end
+
+      puts "\n\nFinished Adding #{alf_ids.count} people from ALF\n\n"
     end
 
     task date_limit: :environment do
@@ -103,17 +98,13 @@ namespace :build do
           prev.contact_id
         end
       end
-      puts "\n\nids #{act_ids.count}\n\n"
       act_ids = act_ids.uniq
-      puts "\n\nids2 #{act_ids.count}\n\n"
       ids.concat(act_ids)
 
       # Contribution Ids
       contrib_ids = CIVICRM::Contribution::where('receive_date >= ?', '2017-07-01').pluck('contact_id').uniq
-      puts "\n\ncontrib ids #{contrib_ids.count}\n\n"
 
       ids = ids.concat(contrib_ids).uniq;
-      puts "\n\nids #{ids.count}\n\n"
 
       contacts = CIVICRM::Contact.where('id in (?)',ids)
       indivs = contacts.where(contact_type: 'Individual')
@@ -125,18 +116,27 @@ namespace :build do
       end
 
       households = households.flatten.uniq
-      puts "\n\nhouseholds: #{households}\n\n"
       ids = ids.concat(households).uniq
-
-      puts "\n\nFINAL IDS #{ids}\n#{ids.count}\n\n"
 
       # Remove unecessary records
       rem_contrib = CIVICRM::Contribution::where('receive_date < ?', '2017-07-01')
       puts "\n\nREMOVE CONTRIB: #{rem_contrib.count} out of #{CIVICRM::Contribution.count}\n\n"
-      # rem_contrib.destroy_all
-      rem_contacts = CIVICRM::Contact.where.not(id: ids)
-      puts "\n\nREMOVE Contacts: #{rem_contacts.count} out of #{CIVICRM::Contact.count}\n\n"
-      # rem_contacts.destroy_all
+      rem_contrib.destroy_all
+      puts "#{CIVICRM::Contribution.count} Contributions Remaining\n\n"
+
+
+      CIVICRM::VineContactPrevId.where.not(contact_id: ids).destroy_all
+      CIVICRM::Relationship.where.not(contact_id_a: ids).destroy_all
+      CIVICRM::Relationship.where.not(contact_id_b: ids).destroy_all
+      CIVICRM::Address.where.not(contact_id: ids).destroy_all
+      CIVICRM::Phone.where.not(contact_id: ids).destroy_all
+      CIVICRM::Email.where.not(contact_id: ids).destroy_all
+
+
+      rem_contacts = CIVICRM::Contact.where.not(id: ids, display_name: 'Vine Church')
+      puts "\n\nREMOVE Contacts: #{rem_contacts.count} out of #{CIVICRM::Contact.count}"
+      rem_contacts.destroy_all
+      puts "#{CIVICRM::Contact.count} Contacts Remaining\n\n"
 
     end
   end

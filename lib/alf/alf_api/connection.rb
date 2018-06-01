@@ -8,7 +8,7 @@ module AlfAPI
         when 'get'
           get model_name, path, data
         else
-          puts "\nYeah we're not bother with #{method} for this\n"
+          puts "\nYeah we're not bothering with #{method} for this\n"
         end
       end
 
@@ -28,7 +28,10 @@ module AlfAPI
         begin
           response = Net::HTTP.get uri
         rescue Exception => ex
-          puts "\n\nGet Exception #{ex.inspect}\n\n"
+          puts "\n\nGet Exception in AlfAPI::Connection - #{ex.inspect}"
+          puts "\nData: #{model_name} - #{data.inspect}\n\n"
+          puts "Attempting request again..."
+          return get(model_name, path, data)
         end
         if response.present?
           resp = JSON.parse(response)
