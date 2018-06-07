@@ -290,8 +290,18 @@ class ALF::Person < ALF::Base
     house = CIVICRM::Contact.find(h_prev_id)
 
     household_type = ALF::HouseholdPosition.findId(self.household_position)
-    member_household = CIVICRM::RelationshipType.where(id: 7).take
+
+    # Get relationships
+    # head - a    household - b
     head_household = CIVICRM::RelationshipType.where(id: 6).take
+    # child - a   parent - b
+    child_parent = CIVICRM::RelationshipType.where(id: 1).take
+    # spouse - a/b
+    spouse_rel = CIVICRM::RelationshipType.where(id: 2).take
+    # sibling - a/b
+    sibling = CIVICRM::RelationshipType.where(id: 3).take
+    # individual - a      household - b
+    member_household = CIVICRM::RelationshipType.where(id: 7).take
 
     if household_type.present? && household_type.household_position_name == "Head"
       rel = CIVICRM::Relationship.new(
@@ -299,14 +309,31 @@ class ALF::Person < ALF::Base
         contact_id_b: house.id,
         relationship_type_id: head_household.id
       )
-    else
+    elsif household_type.present? && household_type.household_position_name == "Spouse"
       rel = CIVICRM::Relationship.new(
         contact_id_a: person.id,
         contact_id_b: house.id,
         relationship_type_id: member_household.id
       )
-    end
 
-    rel.save
+      head = CIVICRM::Relationship.where(contact_id_b: house.id, relationship_type_id: head_household.id).take
+      if head.present?
+        # Create spouse relationship
+        sp = CIVICRM::Relationship.new(
+          contact_id_a: head.contact_id_a,
+          contact_id_b: person.id,
+          relationship_type_id: spouse_rel.id
+        )
+
+        sp.save
+      else
+        rel = CIVICRM::Relationship.new(
+          contact_id_a: person.id,
+          contact_id_b: house.id,
+          relationship_type_id: member_household.id
+        )
+      end
+      rel.save
+    end
   end
 end

@@ -49,38 +49,105 @@ namespace :build do
       F1::Fund.civicrm_create_all
       CIVICRM::Campaign.build_models
 
-      # Build the Anonymous Cash user.
-      cash = CIVICRM::Contact.new(
-        first_name: "Anonymous",
-        last_name: "Contribution",
-        contact_type: 'Individual',
-      )
+      cash = CIVICRM::Contact.where(first_name: 'Anonymous', last_name:'Contribution', contact_type: 'Individual').take
+      if cash.nil?
+        # Build the Anonymous Cash user.
+        cash = CIVICRM::Contact.new(
+          first_name: "Anonymous",
+          last_name: "Contribution",
+          contact_type: 'Individual',
+        )
 
-      if !cash.valid? || !cash.save
-        raise "Invalid Contact Model for Anonymous Cash\nCIVICRM::Contact: #{cash.errors.inspect}"
+        if !cash.valid? || !cash.save
+          raise "Invalid Contact Model for Anonymous Cash\nCIVICRM::Contact: #{cash.errors.inspect}"
+        end
       end
 
       F1::ContributionReceipt.civicrm_create_all
 
     end
 
-    task alf_people: :environment do
-      # ALF IDs
-      text = File.read('db/reporting_sg_attendance.csv')
-      alf_ids = text.gsub("\"","").split("\n")
-      # puts "\n\n#{alf_ids.inspect}\n\n"
-      alf_ids.each do |id|
-        # Create the person and household contact models
-        alf_person = ALF::Person.findId(id)
-        alf_person.civicrm_models
-        alf_household = ALF::Household.findId(alf_person.household)
-        alf_household.civicrm_models if !alf_household.nil?
+    # task alf_people: :environment do
+    #   # ALF IDs
+    #   text = File.read('db/reporting_sg_attendance.csv')
+    #   alf_ids = text.gsub("\"","").split("\n").map{ |t| t.to_i }
+    #   member_ids = []
+    #   # puts "\n\n#{alf_ids.inspect}\n\n"
+    #   alf_ids.each do |id|
+    #     # Create the person and household contact models
+    #     alf_person = ALF::Person.findId(id)
+    #     alf_person.civicrm_models
+    #     alf_household = ALF::Household.findId(alf_person.household)
+    #     alf_household.civicrm_models if !alf_household.nil?
+    #
+    #     # Get the members also and add them to the
+    #     if !alf_household.nil?
+    #       members = ALF::Person.where('household', alf_household.household_id)
+    #       m_ids = members.map{ |m| m.person_id }
+    #       # Don't include ids we already have
+    #       member_ids.concat(m_ids - alf_ids)
+    #     end
+    #
+    #     # Relate the person to the household
+    #     alf_person.householdRelation
+    #   end
+    #
+    #   member_ids = member_ids.uniq
+    #
+    #   # Create members of households
+    #   member_ids.each do |id|
+    #     # Create the person and household contact models
+    #     alf_person = ALF::Person.findId(id)
+    #     alf_person.civicrm_models
+    #
+    #     # Relate the person to the household
+    #     alf_person.householdRelation
+    #   end
+    #
+    #   puts "\n\nFinished Adding #{alf_ids.count + member_ids.count} people from ALF\n\n"
+    # end
 
-        # Relate the person to the household
-        alf_person.householdRelation
+    task alf_people: :environment do
+      curr_count = CIVICRM::Contact.count
+      # ALF IDs
+      text = File.read('db/sg_attendance_households.csv')
+      household_ids = text.gsub("\"","").split("\n").map{ |t| t.to_i }
+
+      puts "\nStarting households and members\n"
+
+      household_ids.each do |hid|
+        members = ALF::Person.where('household', hid)
+        members.each do |member|
+          member.civicrm_models
+        end
+
+        person = members.select { |m| m.household_position == 1}[0]
+        person = members[0] if person.nil?
+
+        household = ALF::Household.new(
+          household_id: hid,
+          household_name: person.last_name,
+        )
+
+        household.civicrm_models
+        household.householdRelations(members)
       end
 
-      puts "\n\nFinished Adding #{alf_ids.count} people from ALF\n\n"
+      puts "\nDone with Households and members.\nAdded #{CIVICRM::Contact.count - curr_count} Contacts\n"
+      puts "\nStarting people w/o households\n"
+      curr_count = CIVICRM::Contact.count
+
+      # People with no household
+      text = File.read('db/sg_attendance_person_no_house.csv')
+      person_ids = text.gsub("\"","").split("\n").map{ |t| t.to_i }
+
+      person_ids.each do |pid|
+        person = ALF::Person.findId(pid)
+        person.civicrm_models
+      end
+
+      puts "\nDone with people w/o households.\nAdded #{CIVICRM::Contact.count - curr_count} Contacts\n"
+
     end
 
     task date_limit: :environment do
@@ -109,6 +176,7 @@ namespace :build do
       contacts = CIVICRM::Contact.where('id in (?)',ids)
       indivs = contacts.where(contact_type: 'Individual')
 
+      # Get the households of the individuals
       households = indivs.map do |i|
         types = CIVICRM::RelationshipType.where(contact_type_a: 'Individual', contact_type_b:'Household')
         rels = CIVICRM::Relationship.where(contact_id_a: i.id).where(relationship_type_id: types.pluck('id'))
@@ -118,6 +186,16 @@ namespace :build do
       households = households.flatten.uniq
       ids = ids.concat(households).uniq
 
+      # Get the members of the households that may not have been
+      members = households.map do |h|
+        types = CIVICRM::RelationshipType.where(contact_type_a: 'Individual', contact_type_b:'Household')
+        rels = CIVICRM::Relationship.where(contact_id_b: h).where(relationship_type_id: types.pluck('id'))
+        rels.pluck('contact_id_a')
+      end
+
+      members = members.flatten.uniq
+      ids = ids.concat(members).uniq
+
       # Remove unecessary records
       rem_contrib = CIVICRM::Contribution::where('receive_date < ?', '2017-07-01')
       puts "\n\nREMOVE CONTRIB: #{rem_contrib.count} out of #{CIVICRM::Contribution.count}\n\n"
@@ -126,8 +204,10 @@ namespace :build do
 
 
       CIVICRM::VineContactPrevId.where.not(contact_id: ids).destroy_all
+
       CIVICRM::Relationship.where.not(contact_id_a: ids).destroy_all
       CIVICRM::Relationship.where.not(contact_id_b: ids).destroy_all
+
       CIVICRM::Address.where.not(contact_id: ids).destroy_all
       CIVICRM::Phone.where.not(contact_id: ids).destroy_all
       CIVICRM::Email.where.not(contact_id: ids).destroy_all

@@ -69,8 +69,6 @@ class ALF::Household < ALF::Base
       :addressee_custom => nil,
       :addressee_display => nil,
       :household_name => self.household_name,
-      :created_date => self.household_created_date,
-      :modified_date => self.household_last_update
     )
   end
 
@@ -156,6 +154,106 @@ class ALF::Household < ALF::Base
 
       if !phone.valid? || !phone.save
         raise "Invalid Phone Model\nCIVICRM::Phone: #{phone.inspect}\nALF::Phone: #{p.inspect}\nHousehold: #{self.household_id}\n"
+      end
+    end
+  end
+
+
+  def householdRelations(alf_members)
+    household_civi_id = CIVICRM::VineContactPrevId.where(alf_id: self.household_id).take.contact_id
+    head_pos = 1
+    spouse_pos = 2
+    child_pos = 3
+
+    alf_head = alf_members.select { |m| m.household_position == head_pos}[0]
+    alf_spouse = alf_members.select { |m| m.household_position == spouse_pos}[0]
+    alf_children = alf_members.select { |m| m.household_position == child_pos}
+
+    # Get relationships
+    # head - a    household - b
+    head_household = CIVICRM::RelationshipType.where(id: 6).take
+    # child - a   parent - b
+    child_parent = CIVICRM::RelationshipType.where(id: 1).take
+    # spouse - a/b
+    husband_wife = CIVICRM::RelationshipType.where(id: 2).take
+    # sibling - a/b
+    sibling = CIVICRM::RelationshipType.where(id: 3).take
+    # individual - a      household - b
+    member_household = CIVICRM::RelationshipType.where(id: 7).take
+
+
+    if alf_head.present?
+      head_id = CIVICRM::VineContactPrevId.where(alf_id: alf_head.person_id).take.contact_id
+      head_rel = CIVICRM::Relationship.new(
+        contact_id_a: head_id,
+        contact_id_b: household_civi_id,
+        relationship_type_id: head_household.id
+      )
+      head_rel.save
+    end
+
+    if alf_spouse.present?
+      spouse_id = CIVICRM::VineContactPrevId.where(alf_id: alf_spouse.person_id).take.contact_id
+      spouse_rel = CIVICRM::Relationship.new(
+        contact_id_a: spouse_id,
+        contact_id_b: household_civi_id,
+        relationship_type_id: member_household.id
+      )
+      spouse_rel.save
+
+      if head_id.present?
+        hs_rel = CIVICRM::Relationship.new(
+          contact_id_a: head_id,
+          contact_id_b: spouse_id,
+          relationship_type_id: husband_wife.id
+        )
+        hs_rel.save
+      end
+    end
+
+    if !alf_children.empty?
+      civi_children = []
+      alf_children.each do |child|
+        child_id = CIVICRM::VineContactPrevId.where(alf_id: child.person_id).take.contact_id
+        # CHILD TO HOUSEHOLD
+        cr = CIVICRM::Relationship.new(
+          contact_id_a: child_id,
+          contact_id_b: household_civi_id,
+          relationship_type_id: member_household.id
+        )
+        cr.save
+
+        # CHILD TO PARENT HEAD
+        if head_id.present?
+          chr = CIVICRM::Relationship.new(
+            contact_id_a: head_id,
+            contact_id_b: child_id,
+            relationship_type_id: child_parent.id
+          )
+          chr.save
+        end
+
+        # CHILD TO PARENT SPOUSE
+        if spouse_id.present?
+          csr = CIVICRM::Relationship.new(
+            contact_id_a: spouse_id,
+            contact_id_b: child_id,
+            relationship_type_id: child_parent.id
+          )
+          csr.save
+        end
+
+        #SIBLINGS
+        civi_children.each do |sib_id|
+          sibr = CIVICRM::Relationship.new(
+            contact_id_a: sib_id,
+            contact_id_b: child_id,
+            relationship_type_id: sibling.id
+          )
+          sibr.save
+        end
+
+        civi_children.push(child_id)
       end
     end
   end

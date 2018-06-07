@@ -253,6 +253,7 @@ class F1::ContributionReceipt < F1::Base
 
   # Create all missing models
   def self.civicrm_create_all
+    puts "\nStarting Contributions. This could take a while...\n"
     start = CIVICRM::Contribution.count
     F1::ContributionReceipt.all.each do |c|
       c.civicrm_models()
