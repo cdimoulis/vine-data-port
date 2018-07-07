@@ -118,10 +118,12 @@ class F1::Communication < F1::Base
 
   # Create the contact model
   def email_model
+    login = F1::CommunicationType.where(name: 'InFellowship Login').take;
     # If there is a person id then the person_id is the contact id for emails
     if !person_id.nil?
       contact_type = CIVICRM::ContactType.where(name: 'Individual').take
       contact_id = person_id
+      has_login = F1::Communication.exists?(communication_general_type: 'Email', person_id: person_id, communication_type_id: login.id)
     # Otherwise find the household
     else
       contact_type = CIVICRM::ContactType.where(name: 'Household').take
@@ -140,14 +142,15 @@ class F1::Communication < F1::Base
           contact_id = household.people.first.id
         end
       end
+      has_login = F1::Communication.exists?(communication_general_type: 'Email', person_id: contact_id, communication_type_id: login.id)
     end
     # Get civicrm contact id from vine contact prev id table
     prev_id = CIVICRM::VineContactPrevId.where(f1_id: contact_id, contact_type_id: contact_type.id).take
     loc_type = CIVICRM::LocationType.where(name: 'Other').take
 
     # Main and secondary email
-    if self.communication_type.name == "InFellowship Login"
-      loc_type = CIVICRM::LocationType.where(name: 'Main').take
+    if !has_login || (self.communication_type.name == "InFellowship Login")
+      loc_type = CIVICRM::LocationType.where(name: 'Primary').take
     elsif self.communication_type.name == "Email"
       loc_type = CIVICRM::LocationType.where(name: 'Secondary').take
     end
@@ -155,7 +158,7 @@ class F1::Communication < F1::Base
     CIVICRM::Email.new(
       contact_id: prev_id.contact_id,
       location_type_id: loc_type.id,
-      email: communication_value,
+      email: communication_value.strip,
       is_primary: self.preferred
     )
   end

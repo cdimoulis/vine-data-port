@@ -16,7 +16,15 @@ namespace :build do
       puts "CIVICRM created #{indiv_count} Individual Contacts\n"
 
       # Create Household contacts
+      head_type = F1::HouseholdMemberType.where(name: 'Head').take
+      spouse_type = F1::HouseholdMemberType.where(name: 'Spouse').take
       F1::Household.all.each do |household|
+        f1_person = F1::Person.where(household_id: household.id, household_member_type_id: head_type.id).take
+        f1_person = F1::Person.where(household_id: household.id, household_member_type_id: spouse_type.id).take if f1_person.nil?
+        f1_person = F1::Person.where(household_id: household.id).first if f1_person.nil?
+        if f1_person.present?
+          household.household_name = "#{f1_person.first_name} #{f1_person.last_name}"
+        end
         household.civicrm_models
       end
       house_count = CIVICRM::Contact.count - indiv_count
@@ -122,11 +130,12 @@ namespace :build do
         end
 
         person = members.select { |m| m.household_position == 1}[0]
+        person = members.select { |m| m.household_position == 2}[0] if person.nil?
         person = members[0] if person.nil?
 
         household = ALF::Household.new(
           household_id: hid,
-          household_name: person.last_name,
+          household_name: "#{person.first_name} #{person.last_name}",
         )
 
         household.civicrm_models
@@ -138,13 +147,13 @@ namespace :build do
       curr_count = CIVICRM::Contact.count
 
       # People with no household
-      text = File.read('db/sg_attendance_person_no_house.csv')
-      person_ids = text.gsub("\"","").split("\n").map{ |t| t.to_i }
-
-      person_ids.each do |pid|
-        person = ALF::Person.findId(pid)
-        person.civicrm_models
-      end
+      # text = File.read('db/sg_attendance_person_no_house.csv')
+      # person_ids = text.gsub("\"","").split("\n").map{ |t| t.to_i }
+      #
+      # person_ids.each do |pid|
+      #   person = ALF::Person.findId(pid)
+      #   person.civicrm_models
+      # end
 
       puts "\nDone with people w/o households.\nAdded #{CIVICRM::Contact.count - curr_count} Contacts\n"
 

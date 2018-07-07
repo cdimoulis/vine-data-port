@@ -191,15 +191,18 @@ class ALF::Person < ALF::Base
       e_type = ALF::EmailType.findId(e.email_type)
 
       if e_type.present? && (e_type.email_type == 'Personal')
-        loc_type = CIVICRM::LocationType.where(name: 'Main').take
+        loc_type = CIVICRM::LocationType.where(name: 'Primary').take
+        primary = true
       else
         loc_type = CIVICRM::LocationType.where(name: 'Secondary').take
+        primary = false
       end
 
       email = CIVICRM::Email.new(
         contact_id: contact.id,
         email: e.email_address,
         location_type_id: loc_type.id,
+        is_primary: primary
       )
 
       if !email.valid? || !email.save
